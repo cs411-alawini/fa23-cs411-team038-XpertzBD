@@ -1,4 +1,4 @@
-from flask import Flask,request,jsonify
+from flask import Flask, request, jsonify
 import pymysql
 import datetime,random,string,requests
 
@@ -57,6 +57,28 @@ def test_db():
         return f"Database connection successful. Date from DB: {result[0]}"
     except Exception as e:
         return f"Database connection failed: {e}", 500
+    
+@app.route('/app/search')
+def search_crime():
+     with connection.cursor() as cursor:
+        # SQL query
+        sql = "SELECT * FROM Crime WHERE Date_OCC LIKE '1/10/21' LIMIT 20"
+        cursor.execute(sql)
+        results = cursor.fetchall()
+
+        # Convert results to a list of dictionaries for JSON response
+        crime_list = []
+        for row in results:
+            crime_dict = {
+                "column1": row[0],
+                "column2": row[1],
+                # Add more columns as needed
+            }
+            crime_list.append(crime_dict)
+    # Close the connection
+     connection.close()
+     return jsonify(crime_list)
+
 
 # Function to generate a random DR_ID
 def generate_random_id(size=6, chars=string.ascii_uppercase + string.digits):
