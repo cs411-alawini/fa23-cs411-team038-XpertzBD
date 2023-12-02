@@ -1,9 +1,11 @@
 from flask import Flask, request, jsonify
+from flask_cors import CORS
 import pymysql
 import datetime,random,string,requests
 
 app = Flask(__name__)
-
+CORS(app)
+CORS(app, resources={r"/create": {"origins": "http://localhost:3001"}})
 
 # db config
 host = "34.173.12.149"
@@ -117,33 +119,23 @@ def Create_case():
                     break  # Unique ID found
         # Use request.json or request.get_json() for POST requests with JSON body
         data = request.get_json()
-        UserId = data.get('UserId')
+        # UserId = data.get('UserId')
         Location = data.get('Location')
         CrimeDate = data.get('Date')
-        WeaponType = data.get('Weapon')
+        WeaponType = data.get('WeaponType')
         WeaponID = WeaponTypeDic[WeaponType]
         CrimeType = data.get('CrimeType')
         CrimeID = CrimeTypeDic[CrimeType]
         ReportDate = datetime.datetime.now().strftime('%m/%d/%y')
-
-        
-        # UserId = request.args.get('UserId')
-        # Location = request.args.get('Location') # text box for input
-        # CrimeDate = request.args.get('Date') # text box for input? make sure the date is in format m/d/y
-        # WeaponType = request.args.get('Weapon')      # drop down menu for user to choose
-        # WeaponID = WeaponTypeDic[WeaponType]
-        # CrimeType = request.args.get('CrimeType') #drop down menu for user to choose
-        # CrimeID = CrimeTypeDic[CrimeType]
-        # ReportDate = datetime.datetime.now().strftime('%m/%d/%y')
         
          # Geocode the address to get LAT and LON
         LAT, LON = get_lat_lon_from_address(Location)
                 
         with connection.cursor() as cursor:
             # Prepare SQL query with all required fields
-            sql = """INSERT INTO Crime (Dr_ID, Date_Rptd, Date_OCC, Crm_cd, Weapon_Used_Cd, LAT, LON,UserId) 
-                     VALUES (%s, %s, %s, %s, %s, %s, %s,%s)"""
-            cursor.execute(sql, (Dr_ID, ReportDate, CrimeDate, CrimeID, WeaponID, LAT, LON,UserId))
+            sql = """INSERT INTO Crime (Dr_ID, Date_Rptd, Date_OCC, Crm_cd, Weapon_Used_Cd, LAT, LON) 
+                     VALUES (%s, %s, %s, %s, %s, %s, %s)"""
+            cursor.execute(sql, (Dr_ID, ReportDate, CrimeDate, CrimeID, WeaponID, LAT, LON))
             connection.commit()
             
             
