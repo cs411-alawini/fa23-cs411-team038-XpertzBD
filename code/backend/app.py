@@ -5,7 +5,7 @@ import datetime,random,string,requests
 
 app = Flask(__name__)
 CORS(app)
-CORS(app, resources={r"/create": {"origins": "http://localhost:3001"}})
+CORS(app, resources={r"/create": {"origins": "http://localhost:3000"}})
 
 # db config
 host = "34.173.12.149"
@@ -46,22 +46,21 @@ def hello_world():
 def test_db():
     try:
         # Connect to the database
-        # connection = pymysql.connect(host=host, user=user, password=password, db=dbname)
+        connection = pymysql.connect(host=host, user=user, password=password, db=dbname)
         
         with connection.cursor() as cursor:
             # Perform a simple test query
             cursor.execute("SELECT CURDATE()")
             result = cursor.fetchone()
-        
-        # Close the connection
-        connection.close()
 
         return f"Database connection successful. Date from DB: {result[0]}"
     except Exception as e:
         return f"Database connection failed: {e}", 500
     
-@app.route('/app/search')
+@app.route('/test/search', methods=['GET'])
 def search_crime():
+    # Connect to the database
+     connection = pymysql.connect(host=host, user=user, password=password, db=dbname)
      with connection.cursor() as cursor:
         # SQL query
         sql = "SELECT * FROM Crime WHERE Date_OCC LIKE '1/10/21' LIMIT 20"
@@ -74,12 +73,56 @@ def search_crime():
             crime_dict = {
                 "column1": row[0],
                 "column2": row[1],
-                # Add more columns as needed
+                "column3": row[2],
+                "column4": row[3],
+                "column5": row[4],
+                "column6": row[5],
+                "column7": row[6],
+                "column8": row[7],
+                "column9": row[8],
+                "column10": row[9],
             }
             crime_list.append(crime_dict)
-    # Close the connection
-     connection.close()
      return jsonify(crime_list)
+
+@app.route('/search', methods=['GET'])
+def Search_case():
+    try:
+        Location = request.args.get('Location')
+        CrimeDate = request.args.get('Date')
+        WeaponType = request.args.get('WeaponType')
+        CrimeType = request.args.get('CrimeType')
+
+        search_query = "SELECT * FROM Crime WHERE 1=1"
+        query_parameters = []
+
+        if Location:
+            search_query += " AND Location = %s"
+            query_parameters.append(Location)
+        if CrimeDate:
+            search_query += " AND Date_OCC = %s"
+            query_parameters.append(CrimeDate)
+        if WeaponType:
+            WeaponID = WeaponTypeDic.get(WeaponType)
+            if WeaponID:
+                search_query += " AND Weapon_Used_Cd = %s"
+                query_parameters.append(WeaponID)
+        if CrimeType:
+            CrimeID = CrimeTypeDic.get(CrimeType)
+            if CrimeID:
+                search_query += " AND Crm_cd = %s"
+            query_parameters.append(CrimeID)
+
+         # Connect to the database
+        connection = pymysql.connect(host=host, user=user, password=password, db=dbname)    
+        with connection.cursor() as cursor:
+            cursor.execute(search_query, tuple(query_parameters))
+            results = cursor.fetchall()
+
+        return jsonify(results)
+    except Exception as e:
+        print('Error:', e)
+        return jsonify({'error': str(e)})
 
 
 # Function to generate a random DR_ID
