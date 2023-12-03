@@ -38,6 +38,17 @@ WeaponTypeDic = {
     'Physical':'515'
 }
 
+def convert_date_format(input_date):
+    # Parse the input date string
+    date = datetime.strptime(input_date, "%Y/%m/%d")
+
+    # Extract the month, day, and year, and format the date as M/D/YY
+    month = date.month  # month as a number without leading zero
+    day = date.day      # day as a number without leading zero
+    year = date.strftime("%y")  # year in two-digit format
+
+    return f"{month}/{day}/{year}"
+
 @app.route('/')
 def hello_world():
     return 'Hello, World!'
@@ -56,74 +67,6 @@ def test_db():
         return f"Database connection successful. Date from DB: {result[0]}"
     except Exception as e:
         return f"Database connection failed: {e}", 500
-    
-@app.route('/test/search', methods=['GET'])
-def search_crime():
-    # Connect to the database
-     connection = pymysql.connect(host=host, user=user, password=password, db=dbname)
-     with connection.cursor() as cursor:
-        # SQL query
-        sql = "SELECT * FROM Crime WHERE Date_OCC LIKE '1/10/21' LIMIT 20"
-        cursor.execute(sql)
-        results = cursor.fetchall()
-
-        # Convert results to a list of dictionaries for JSON response
-        crime_list = []
-        for row in results:
-            crime_dict = {
-                "column1": row[0],
-                "column2": row[1],
-                "column3": row[2],
-                "column4": row[3],
-                "column5": row[4],
-                "column6": row[5],
-                "column7": row[6],
-                "column8": row[7],
-                "column9": row[8],
-                "column10": row[9],
-            }
-            crime_list.append(crime_dict)
-     return jsonify(crime_list)
-
-@app.route('/search', methods=['GET'])
-def Search_case():
-    try:
-        Location = request.args.get('Location')
-        CrimeDate = request.args.get('Date')
-        WeaponType = request.args.get('WeaponType')
-        CrimeType = request.args.get('CrimeType')
-
-        search_query = "SELECT * FROM Crime WHERE 1=1"
-        query_parameters = []
-
-        if Location:
-            search_query += " AND Location = %s"
-            query_parameters.append(Location)
-        if CrimeDate:
-            search_query += " AND Date_OCC = %s"
-            query_parameters.append(CrimeDate)
-        if WeaponType:
-            WeaponID = WeaponTypeDic.get(WeaponType)
-            if WeaponID:
-                search_query += " AND Weapon_Used_Cd = %s"
-                query_parameters.append(WeaponID)
-        if CrimeType:
-            CrimeID = CrimeTypeDic.get(CrimeType)
-            if CrimeID:
-                search_query += " AND Crm_cd = %s"
-            query_parameters.append(CrimeID)
-
-         # Connect to the database
-        connection = pymysql.connect(host=host, user=user, password=password, db=dbname)    
-        with connection.cursor() as cursor:
-            cursor.execute(search_query, tuple(query_parameters))
-            results = cursor.fetchall()
-
-        return jsonify(results)
-    except Exception as e:
-        print('Error:', e)
-        return jsonify({'error': str(e)})
-
 
 # Function to generate a random DR_ID
 def generate_random_id(size=6, chars=string.ascii_uppercase + string.digits):
@@ -150,6 +93,68 @@ def get_lat_lon_from_address(address):
         return lat, lon
     else:
         raise ValueError("Could not geocode address: " + response.text)
+    
+
+@app.route('/search', methods=['GET'])
+def Search_case():
+    try:
+       
+        #CrimeDate = convert_date_format(request.args.get('Date'))
+        CrimeDate = request.args.get('Date')
+        WeaponType = request.args.get('WeaponType')
+        CrimeType = request.args.get('CrimeType')
+        CrimeTime = request.args.get('Time')
+        Premis = request.args.get('Premis')
+        Judge = request.args.get('Judge')
+        Modus_operandi = request.args.get('Modus_operandi')
+        # Lat = request.args.get('LAT')
+        # Lon = request.args.get('LON')
+
+        search_query = "SELECT * FROM Crime c join WeaponDesc w on c.Weapon_Used_Cd=w.WeaponUsedCd join ModusOperandi m on c.Mocode1=m.Mocodes natural join Crime_Desc WHERE 1=1"
+        query_parameters = []
+
+        if CrimeDate:
+            search_query += " AND Date_OCC = %s"
+            query_parameters.append(CrimeDate)
+        if CrimeTime:
+            search_query += " AND Time_OCC = %s"
+            query_parameters.append(CrimeTime) 
+        if Premis:
+            search_query += " AND PremisDesc = %s"
+            query_parameters.append(Premis) 
+        if Judge:
+            search_query += " AND Judge_Status_desc = %s"
+            query_parameters.append(Judge) 
+        # if Modus_operandi:
+        #     search_query += " AND Mocodes_Desc LIKE %s"
+        #     query_parameters.append(Modus_operandi)                 
+        # if Lat:
+        #     search_query += " AND LAT = %s"
+        #     query_parameters.append(Lat)     
+        # if Lon:
+        #     search_query += " AND LON = %s"
+        #     query_parameters.append(Lon)         
+        if WeaponType:
+            WeaponID = WeaponTypeDic.get(WeaponType)
+            if WeaponID:
+                search_query += " AND Weapon_Used_Cd = %s"
+                query_parameters.append(WeaponID)
+        if CrimeType:
+            CrimeID = CrimeTypeDic.get(CrimeType)
+            if CrimeID:
+                search_query += " AND Crm_cd = %s"
+            query_parameters.append(CrimeID)
+
+         # Connect to the database
+        connection = pymysql.connect(host=host, user=user, password=password, db=dbname)    
+        with connection.cursor() as cursor:
+            cursor.execute(search_query, tuple(query_parameters))
+            results = cursor.fetchall()
+
+        return jsonify(results)
+    except Exception as e:
+        print('Error:', e)
+        return jsonify({'error': str(e)})    
 
 @app.route('/create',methods=['POST'])
 def Create_case():

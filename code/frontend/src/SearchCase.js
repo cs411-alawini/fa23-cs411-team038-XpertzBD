@@ -2,7 +2,8 @@ import React, { useState } from 'react';
 
 function SearchCase() {
     const [searchQuery, setSearchQuery] = useState({
-        Location: '',
+        LAT: '',
+        LON: '',
         Date: '',
         WeaponType: '',
         CrimeType: '',
@@ -32,25 +33,16 @@ function SearchCase() {
     ];
 
     const keyMappings = {
-        0: 'Dr_ID',
-        1: 'Date_Rptd',
-        2: 'Date_OCC',
-        3: 'Time_OCC',
-        4: 'Part1_2',
-        5: 'Crm_cd',
+        1: 'Dr_ID',
+        3: 'Date_OCC',
+        4: 'Time_OCC',
         6: 'PremisDesc',
-        7: 'Weapon_Used_cd',
         8: 'Judge_Status',
-        9: 'Crm_cd1',
-        10: 'Crm_cd2',
-        11: 'Crm_cd3',
-        12: 'Crm_cd4',
         13: 'LAT',
         14: 'LON',
-        15: 'Mocode1',
-        16: 'Mocode2',
-        17: 'Mocode3',
-        18: 'UserId'
+        20: 'Weapon_Desc',
+        22: 'Modus_operandi',
+        23: 'Crime_Desc'
     };
 
     const [searchResults, setSearchResults] = useState([]);
@@ -83,23 +75,71 @@ function SearchCase() {
         <div>
             <h1>Search Cases</h1>
             <form onSubmit={handleSearch}>
-                <label htmlFor="Location">Location:</label>
+
+                <label htmlFor="Date">Date:</label>
                 <input
-                    type="text"
-                    name="Location"
-                    value={searchQuery.Location}
+                    name="Date"
+                    value={searchQuery.Date}
+                    onChange={handleChange}
+                    placeholder="e.g., 1/3/21"
+                />
+                <br />
+
+                <label htmlFor="Time">Time:</label>
+                <input
+                    name="Time"
+                    value={searchQuery.Time}
+                    onChange={handleChange}
+                    placeholder="e.g., 1440 or 330"
+                />
+                <br />
+
+                <label htmlFor="Premis">Premis:</label>
+                <input
+                    name="Premis"
+                    value={searchQuery.Premis}
                     onChange={handleChange}
                 />
                 <br />
 
-                <label htmlFor="Date">Date:</label>
+                <label htmlFor="Judge">Judge:</label>
+                <select
+                    name="Judge"
+                    value={searchQuery.Judge}
+                    onChange={handleChange}
+                >
+                    <option value="">Select a Judge status</option>
+                    <option value="Adult Arrest">Adult Arrest</option>
+                    <option value="Invest Cont">Invest Cont</option>
+                    <option value="Adult Other">Adult Other</option>
+                </select>
+                <br />
+                
+                {/* <label htmlFor="Modus_operandi">Modus_operandi:</label>
                 <input
-                    type="Date"
-                    name="Date"
-                    value={searchQuery.Date}
+                    name="Modus_operandi"
+                    value={searchQuery.Modus_operandi}
                     onChange={handleChange}
                 />
+                <br /> */}
+
+                {/* <label htmlFor="LAT">LAT:</label>
+                <input
+                    name="LAT"
+                    value={searchQuery.LAT}
+                    onChange={handleChange}
+                    placeholder="e.g., 33.8498"
+                />
                 <br />
+
+                <label htmlFor="LON">LON:</label>
+                <input
+                    name="LON"
+                    value={searchQuery.LON}
+                    onChange={handleChange}
+                    placeholder="e.g., -118.293"
+                />
+                <br /> */}
 
                 <label htmlFor="WeaponType">Weapon:</label>
                 <select
@@ -129,35 +169,31 @@ function SearchCase() {
                 <button type="submit">Search</button>
             </form>
 
-            {/* <div>
+
+            <div>
                 <h2>Search Results</h2>
                 <strong>{searchResults.length} records found</strong>
-                {searchResults.map((item, index) => (
-                    <pre key={index}>
-                        {Object.entries(item)
-                            .filter(([key, value]) => value != null)
-                            .map(([key, value]) => (
-                                <span key={key}><u>{keyMappings[key] || key}</u>: {value}</span>
-                            ))
-                            .reduce((acc, span, idx, array) => idx < array.length - 1 ? [...acc, span, ', '] : [...acc, span], [])}
-                    </pre>
-                ))}
-            </div> */}
+                <table>
+                    <thead>
+                        <tr>
+                            {Object.keys(searchResults[0] || {}).filter((_, idx) => [1, 3, 4, 6, 8, 13, 14, 20, 22, 23].includes(idx))
+                                .map((key, idx) => <th key={idx}>{keyMappings[key] || key}</th>)}
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {searchResults.map((item, index) => (
+                            <tr key={index}>
+                                {Object.entries(item)
+                                    .filter((_, idx) => [1, 3, 4, 6, 8, 13, 14, 20, 22, 23].includes(idx))
+                                    .map(([key, value], idx) => (
+                                        <td key={idx}>{value}</td>
+                                    ))}
+                            </tr>
+                        ))}
+                    </tbody>
+                </table>
+            </div>
 
-<div>
-    <h2>Search Results</h2>
-    <strong>{searchResults.length} records found</strong>
-    {searchResults.map((item, index) => (
-        <pre key={index}>
-            {Object.entries(item)
-                .filter((_, idx) => [0, 1, 2, 3, 5, 6, 7, 8, 13, 14, 15, 16, 17].includes(idx))
-                .map(([key, value]) => (
-                    <span key={key}><u><strong>{keyMappings[key] || key}</strong></u>: {value}</span>
-                ))
-                .reduce((acc, span, idx, array) => idx < array.length - 1 ? [...acc, span, ', '] : [...acc, span], [])}
-        </pre>
-    ))}
-</div>
 
 
 
