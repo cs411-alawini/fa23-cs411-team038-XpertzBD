@@ -117,6 +117,7 @@ def Create_case():
                 cursor.execute("SELECT COUNT(*) FROM Crime WHERE Dr_ID = %s", (Dr_ID,))
                 if cursor.fetchone()[0] == 0:
                     break  # Unique ID found
+        # print('newly reported case Dr_ID: ', Dr_ID)
         # Use request.json or request.get_json() for POST requests with JSON body
         data = request.get_json()
         # UserId = data.get('UserId')
@@ -138,7 +139,7 @@ def Create_case():
             cursor.execute(sql, (Dr_ID, ReportDate, CrimeDate, CrimeID, WeaponID, LAT, LON))
             connection.commit()
             
-            
+
             return jsonify({'message': 'New Crime case added successfully.'})
     except Exception as e:
         connection.rollback()
