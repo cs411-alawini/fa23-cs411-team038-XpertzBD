@@ -110,7 +110,7 @@ def Search_case():
         # Lat = request.args.get('LAT')
         # Lon = request.args.get('LON')
 
-        search_query = "SELECT * FROM Crime c join WeaponDesc w on c.Weapon_Used_Cd=w.WeaponUsedCd join ModusOperandi m on c.Mocode1=m.Mocodes natural join Crime_Desc WHERE 1=1"
+        search_query = "SELECT * FROM Crime c LEFT OUTER join WeaponDesc w on c.Weapon_Used_Cd=w.WeaponUsedCd LEFT OUTER join ModusOperandi m on c.Mocode1=m.Mocodes natural left outer join Crime_Desc WHERE 1=1"
         query_parameters = []
 
         if CrimeDate:

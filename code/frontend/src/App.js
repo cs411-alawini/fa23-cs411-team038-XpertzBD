@@ -8,7 +8,7 @@ function App() {
     <Router>
       <div>
         <nav>
-          <Link to="/">Home</Link> | <Link to="/report">Report Case</Link> | <Link to="/search">Search Case</Link>
+          <Link to="/">Home</Link> | <Link to="/report">Report Case</Link> | <Link to="/search">Search Case</Link> 
         </nav>
         <Routes> {/* Change here from Switch to Routes */}
           <Route exact path="/" element={<h1>Welcome to the Home Page</h1>} /> {/* Change for Route */}
