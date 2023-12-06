@@ -10,7 +10,9 @@ function CreateCase() {
         Date: '',
         WeaponType: '',
         CrimeType: '',
-        Time: ''
+        Time: '',
+        Premis: '',
+        Judge_stat: '',
     });
 
     const weaponOptions = [
@@ -114,6 +116,30 @@ function CreateCase() {
                     onChange={handleChange}
                     required
                 />
+                <br />
+
+                <label htmlFor="Premis"> Premis - Place of crime:</label>
+                <input
+                    type="text"
+                    name="Premis"
+                    value={caseDetails.Premis}
+                    onChange={handleChange}
+                    placeholder="e.g., STREET"
+                    required
+                />
+                <br />
+
+                <label htmlFor="Judge"> Judge Status:</label>
+                <select
+                    name="Judge"
+                    value={caseDetails.Judge}
+                    onChange={handleChange}
+                >
+                    <option value="">Select a Judge status</option>
+                    <option value="Adult Arrest">Adult Arrest</option>
+                    <option value="Invest Cont">Invest Cont</option>
+                    <option value="Adult Other">Adult Other</option>
+                </select>
                 <br />
 
                 <label htmlFor="WeaponType">Weapon:</label>

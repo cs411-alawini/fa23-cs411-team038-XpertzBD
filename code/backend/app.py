@@ -5,17 +5,15 @@ import datetime,random,string,requests
 from flask_jwt_extended import JWTManager, create_access_token, jwt_required, get_jwt_identity
 from werkzeug.security import generate_password_hash, check_password_hash
 
-import openai
 from openai import OpenAI
 
-client = OpenAI(api_key='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')
+client = OpenAI(api_key='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')
 import os
 
 app = Flask(__name__)
 app.config['JWT_SECRET_KEY'] = 'your_jwt_secret'  # Change this to a random secret key
 jwt = JWTManager(app)
-CORS(app)
-CORS(app, resources={r"/create": {"origins": "http://localhost:3000"}})
+CORS(app, origins="http://localhost:3000")
 
 # db config
 host = "34.173.12.149"
@@ -251,6 +249,9 @@ def Create_case():
         CrimeTime = data.get('Time')
         CrimeDate = data.get('Date')
         WeaponType = data.get('WeaponType')
+        Premis = data.get('Premis')
+        Judge = data.get('Judge')
+
         WeaponID = WeaponTypeDic[WeaponType]
         CrimeType = data.get('CrimeType')
         CrimeID = CrimeTypeDic[CrimeType]
@@ -261,9 +262,9 @@ def Create_case():
                 
         with connection.cursor() as cursor:
             # Prepare SQL query with all required fields
-            sql = """INSERT INTO Crime (Dr_ID, Date_Rptd, Date_OCC, Crm_cd, Weapon_Used_Cd, LAT, LON, Time_OCC) 
-                     VALUES (%s, %s, %s, %s, %s, %s, %s, %s)"""
-            cursor.execute(sql, (Dr_ID, ReportDate, CrimeDate, CrimeID, WeaponID, LAT, LON, CrimeTime))
+            sql = """INSERT INTO Crime (Dr_ID, Date_Rptd, Date_OCC, Crm_cd, Weapon_Used_Cd, LAT, LON, Time_OCC, PremisDesc, Judge_Status_desc) 
+                     VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s)"""
+            cursor.execute(sql, (Dr_ID, ReportDate, CrimeDate, CrimeID, WeaponID, LAT, LON, CrimeTime, Premis, Judge))
             connection.commit()
             
             
@@ -364,7 +365,6 @@ def advSQL2():
 def generate_summary2():
     # model = "gpt-3.5-turbo"
     # temperature = 0.7
-    # openai.api_key = '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'
    
     # response1 = requests.get('http://127.0.0.1:5000/advancedSQL1').json()
     response2 = requests.get('http://127.0.0.1:5000/advancedSQL2').json()
@@ -392,7 +392,6 @@ def generate_summary2():
 def generate_summary1():
     # model = "gpt-3.5-turbo"
     # temperature = 0.7
-    # openai.api_key = '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'
    
     response1 = requests.get('http://127.0.0.1:5000/advancedSQL1').json()
     
