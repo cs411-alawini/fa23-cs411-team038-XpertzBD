@@ -1,6 +1,10 @@
+// CreateCase.js
 import React, { useState } from 'react';
+import { useAuth } from './AuthContext';
 
 function CreateCase() {
+    const auth = useAuth(); // Use the useAuth hook
+
     const [caseDetails, setCaseDetails] = useState({
         Location: '',
         Date: '',
@@ -37,11 +41,29 @@ function CreateCase() {
 
     const handleSubmit = async (e) => {
         e.preventDefault();
+
+        console.log('login status: ', auth.isLoggedIn)
+
+        // Check if the user is logged in
+        if (!auth.isLoggedIn) {
+            alert('You must be logged in to report a case.');
+            return;
+        }
+
+
+        // Get the token from localStorage
+        const token = localStorage.getItem('access_token');
+        if (!token) {
+            alert('No authentication token found. Please log in again.');
+            return;
+        }
+
         try {
             const response = await fetch('http://127.0.0.1:5000/create', {
                 method: 'POST',
                 headers: {
                     'content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`
                 },
                 body: JSON.stringify(caseDetails),
             });
