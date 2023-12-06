@@ -389,6 +389,30 @@ def advSQL2():
      return jsonify(crime_list)  
 
 
+
+@app.route('/storedProcedure')
+def storeProcedure():
+     with connection.cursor() as cursor:
+        # SQL query
+        sql = """ call statis_procedure;  """
+        cursor.execute(sql)
+        results = cursor.fetchall()
+
+        # Convert results to a list of dictionaries for JSON response
+        crime_list = []
+        for row in results:
+            crime_dict = {
+                "Hour": row[0],
+                "totalCase": row[1],
+                "top1Premis": row[2],
+                "top1cases": row[3],
+                "portion": row[4],
+                "rating": row[5]
+            }
+            crime_list.append(crime_dict)
+     return jsonify(crime_list)  
+
+
 @app.route('/generateSummary2')
 def generate_summary2():
     # model = "gpt-3.5-turbo"

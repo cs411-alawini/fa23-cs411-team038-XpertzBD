@@ -5,7 +5,7 @@ const AdvancedSQL2 = () => {
 
     useEffect(() => {
         // Fetch data from your backend
-        fetch('http://127.0.0.1:5000/advancedSQL2')
+        fetch('http://127.0.0.1:5000/storedProcedure')
             .then(response => response.json())
             .then(data => setCrimeStats(data))
             .catch(error => console.error('Error fetching data:', error));
@@ -22,17 +22,19 @@ const AdvancedSQL2 = () => {
                         <th>Top Premise</th>
                         <th>Cases at Top Premise</th>
                         <th>Portion</th>
+                        <th>Alert Level</th>
                     </tr>
                 </thead>
                 <tbody>
                     {crimeStats.map((stat, index) => (
                         <tr key={index}>
-                            <td>{stat.Hour}</td>
-                            <td>{stat.totalCase}</td>
-                            <td>{stat.top1Premis}</td>
-                            <td>{stat.top1cases}</td>
-                            <td>{stat.portion}</td>
-                        </tr>
+                        <td style={{ padding: '8px' }}>{stat.Hour}</td>
+                        <td style={{ padding: '8px' }}>{stat.totalCase}</td>
+                        <td style={{ padding: '8px' }}>{stat.top1Premis}</td>
+                        <td style={{ padding: '8px' }}>{stat.top1cases}</td>
+                        <td style={{ padding: '8px' }}>{stat.portion}</td>
+                        <td style={{ padding: '8px' }}>{stat.rating}</td>
+                    </tr>
                     ))}
                 </tbody>
             </table>
