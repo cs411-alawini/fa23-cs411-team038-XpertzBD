@@ -25,14 +25,16 @@ dbname = "CrimeData"
 connection = pymysql.connect(host=host, user=user, password=password, db=dbname)
 
 # Fetch users and their passwords from the database and store in users{}
-try:
-    with connection.cursor() as cursor:
-        sql = "SELECT UserName, Password FROM User"
-        cursor.execute(sql)
-        result = cursor.fetchall()
-        users = {username: {'password': password} for username, password in result}
-except Exception as e:
-    f"Database connection failed: {e}", 500
+def All_users():
+    try:
+        with connection.cursor() as cursor:
+            sql = "SELECT UserName, Password FROM User"
+            cursor.execute(sql)
+            result = cursor.fetchall()
+            users = {username: {'password': password} for username, password in result}
+            return users
+    except Exception as e:
+        f"Database connection failed: {e}", 500
     
 
 CrimeTypeDic = {
@@ -108,6 +110,9 @@ def hello_world():
 def login():
     username = request.json.get('username', None)
     password = request.json.get('password', None)
+    
+    users = All_users()
+    # print(users)
     
     # This should be replaced with a database lookup
     if username not in users or not check_password_hash(users[username]['password'], password):
