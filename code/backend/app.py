@@ -174,6 +174,7 @@ def Create_case():
         data = request.get_json()
         # UserId = data.get('UserId')
         Location = data.get('Location')
+        CrimeTime = data.get('Time')
         CrimeDate = data.get('Date')
         WeaponType = data.get('WeaponType')
         WeaponID = WeaponTypeDic[WeaponType]
@@ -186,9 +187,9 @@ def Create_case():
                 
         with connection.cursor() as cursor:
             # Prepare SQL query with all required fields
-            sql = """INSERT INTO Crime (Dr_ID, Date_Rptd, Date_OCC, Crm_cd, Weapon_Used_Cd, LAT, LON) 
-                     VALUES (%s, %s, %s, %s, %s, %s, %s)"""
-            cursor.execute(sql, (Dr_ID, ReportDate, CrimeDate, CrimeID, WeaponID, LAT, LON))
+            sql = """INSERT INTO Crime (Dr_ID, Date_Rptd, Date_OCC, Crm_cd, Weapon_Used_Cd, LAT, LON, Time_OCC) 
+                     VALUES (%s, %s, %s, %s, %s, %s, %s, %s)"""
+            cursor.execute(sql, (Dr_ID, ReportDate, CrimeDate, CrimeID, WeaponID, LAT, LON, CrimeTime))
             connection.commit()
             
             

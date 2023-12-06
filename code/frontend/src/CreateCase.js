@@ -6,6 +6,7 @@ function CreateCase() {
         Date: '',
         WeaponType: '',
         CrimeType: '',
+        Time: ''
     });
 
     const weaponOptions = [
@@ -82,6 +83,17 @@ function CreateCase() {
                 />
 
                 <br />
+
+                <label htmlFor="Time">Time:</label>
+                <input
+                    type="text"
+                    name="Time"
+                    value={caseDetails.Time}
+                    onChange={handleChange}
+                    required
+                />
+                <br />
+
                 <label htmlFor="WeaponType">Weapon:</label>
                 <select
                     name="WeaponType"
