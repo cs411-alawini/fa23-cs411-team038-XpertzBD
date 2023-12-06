@@ -60,26 +60,26 @@ WeaponTypeDic = {
 }
 
 CrimeTypeDic1 = {
-    'CRIMINAL ROBBERY': '210',
+    'ROBBERY': '210',
     'CRIMINAL HOMICIDE': '110',
-    'CRIMINAL BURGLARY': '310',
+    'BURGLARY': '310',
     'CRIMINAL STALKING': '763',
-    'CRIMINAL DRUG': '865',
-    'CRIMINAL KIDNAPPING': '910',
-    'CRIMINAL TRESPASSING': '888',
-    'CRIMINAL SHOOTING': '753',
-    'CRIMINAL THEFT': '350'
+    'DRUGS, TO A MINOR': '865',
+    'KIDNAPPING': '910',
+    'TRESPASSING': '888',
+    'DISCHARGE FIREARMS/SHOTS FIRED': '753',
+    'THEFT, PERSON': '350'
 }
 
 WeaponTypeDic1 = {
-    'SHOT GUN': '104',
+    'SHOTGUN': '104',
     'HAND GUN': '102',
     'UNKNOWN FIREARM': '106',
     'KITCHEN KNIFE': '205',
     'FOLDING KNIFE': '204',
     'UNKOWN KNIFE': '207',
     'HAMMER': '311',
-    'PHYSICAL': '515'
+    'PHYSICAL PRESENCE': '515'
 }
 
 # Function to generate a random DR_ID
@@ -456,6 +456,7 @@ def delete_case(case_id):
         connection.rollback()
         print('Error during deletion:', e)
         return jsonify({'error': str(e)}), 500
+
 
 @app.route('/update_case/<case_id>', methods=['PUT'])
 def update_case(case_id):

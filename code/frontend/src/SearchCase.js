@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import 'bootstrap/dist/css/bootstrap.min.css';
 
 function SearchCase() {
     const [searchQuery, setSearchQuery] = useState({
@@ -71,105 +72,136 @@ function SearchCase() {
         }
     };
 
-    const handleDelete = async (id) => {
-        if (window.confirm('Are you sure you want to delete this case?')) {
-            try {
-                const response = await fetch(`http://127.0.0.1:5000/delete_case/${id}`, {
-                    method: 'DELETE',
-                });
-
-                if (!response.ok) {
-                    throw new Error(`HTTP error! status: ${response.status}`);
-                }
-
-                setSearchResults(prevResults => prevResults.filter(item => String(item[1]) !== String(id)));
-            } catch (error) {
-                console.error('Error deleting the case:', error);
-                alert('Error deleting the case. Please try again.');
-            }
-        }
-    };
-
-    const [updatingCase, setUpdatingCase] = useState(null);
-
-    const handleUpdateClick = (caseData) => {
-        setUpdatingCase(caseData);
-    };
-
-    const handleUpdateSubmit = async (e, caseId) => {
-        e.preventDefault();
-        const formData = new FormData(e.target);
-        const updatedData = {
-            Date_OCC: formData.get('Date_OCC'),
-            Time_OCC: formData.get('Time_OCC'),
-            PremisDesc: formData.get('PremisDesc'),
-            Judge_Status_desc: formData.get('Judge_Status'),
-            LAT: formData.get('LAT'),
-            LON: formData.get('LON'),
-            Weapon_Desc: formData.get('Weapon_Desc'),
-            Modus_operandi: formData.get('Modus_operandi'),
-            Crime_Desc: formData.get('Crime_Desc')
-        };
-
-        console.log('Updated Data:', updatedData);
-
+    
+const handleDelete = async (id) => {
+    if (window.confirm('Are you sure you want to delete this case?')) {
         try {
-
-            const response = await fetch(`http://127.0.0.1:5000/update_case/${caseId}`, {
-                method: 'PUT',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify(updatedData),
+            const response = await fetch(`http://127.0.0.1:5000/delete_case/${id}`, {
+                method: 'DELETE',
             });
 
             if (!response.ok) {
                 throw new Error(`HTTP error! status: ${response.status}`);
             }
 
-
-            setUpdatingCase(null);
-            handleSearch(new Event('submit'));
+            setSearchResults(prevResults => prevResults.filter(item => String(item[1]) !== String(id)));
         } catch (error) {
-            console.error('Error updating the case:', error);
+            console.error('Error deleting the case:', error);
+            alert('Error deleting the case. Please try again.');
         }
+    }
+};
+
+const [updatingCase, setUpdatingCase] = useState(null);
+const [showUpdateForm, setShowUpdateForm] = useState(false);
+
+   
+const handleUpdateClick = (caseData) => {
+    setUpdatingCase(caseData);
+    setShowUpdateForm(true);
+};
+
+const handleUpdateSubmit = async (e, caseId) => {
+    e.preventDefault();
+    const formData = new FormData(e.target);
+    const updatedData = {
+        Date_OCC: formData.get('Date_OCC'),
+        Time_OCC: formData.get('Time_OCC'),
+        PremisDesc: formData.get('PremisDesc'),
+        Judge_Status_desc: formData.get('Judge_Status'),
+        LAT: formData.get('LAT'),
+        LON: formData.get('LON'),
+        Weapon_Desc: formData.get('Weapon_Desc'),
+        Modus_operandi: formData.get('Modus_operandi'),
+        Crime_Desc: formData.get('Crime_Desc')
     };
 
-    const renderUpdateForm = () => {
-        if (!updatingCase) return null;
-        return (
-            <form onSubmit={(e) => handleUpdateSubmit(e, updatingCase[1])}>
-                <label>Date:</label>
-                <input type="text" name="Date_OCC" defaultValue={updatingCase[3]} />
-                <br />
-                <label>Time:</label>
-                <input type="text" name="Time_OCC" defaultValue={updatingCase[4]} />
-                <br />
-                <label>Premis:</label>
-                <input type="text" name="PremisDesc" defaultValue={updatingCase[6]} />
-                <br />
-                <label>Judge:</label>
-                <input type="text" name="Judge_Status" defaultValue={updatingCase[8]} />
-                <br />
-                <label>LAT:</label>
-                <input type="text" name="LAT" defaultValue={updatingCase[13]} />
-                <br />
-                <label>LON:</label>
-                <input type="text" name="LON" defaultValue={updatingCase[14]} />
-                <br />
-                <label>Modus_operandi:</label>
-                <input type="text" name="Modus_operandi" defaultValue={updatingCase[22]} />
-                <br />
-                <label>Weapon:</label>
-                <input type="text" name="Weapon_Desc" defaultValue={updatingCase[20]} />
-                <br />
-                <label>Crime:</label>
-                <input type="text" name="Crime_Desc" defaultValue={updatingCase[23]} />
-                <br />
-                <button type="submit">Update Case</button>
-            </form>
-        );
-    };
+    console.log('Updated Data:', updatedData);
+
+    try {
+        
+        const response = await fetch(`http://127.0.0.1:5000/update_case/${caseId}`, {
+            method: 'PUT',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(updatedData),
+        });
+
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+
+        setShowUpdateForm(false);
+        setUpdatingCase(null); 
+        handleSearch(new Event('submit')); 
+    } catch (error) {
+        console.error('Error updating the case:', error);
+    }
+};
+
+
+
+const renderUpdateForm = () => {
+    if (!showUpdateForm || !updatingCase) return null;
+    return (
+        <div className="modal show fade" style={{ display: 'block' }} tabIndex="-1">
+            <div className="modal-dialog">
+                <div className="modal-content">
+                    <div className="modal-header">
+                        <h5 className="modal-title">Update Case</h5>
+                        <button type="button" className="btn-close" onClick={() => setShowUpdateForm(false)}></button>
+                    </div>
+                    <div className="modal-body">
+                        <form onSubmit={(e) => handleUpdateSubmit(e, updatingCase[1])}> 
+                            <div className="mb-3">
+                                <label htmlFor="Date_OCC" className="form-label">Date:</label>
+                                <input type="text" className="form-control" name="Date_OCC" defaultValue={updatingCase[3]} />
+                            </div>
+                            <div className="mb-3">
+                                <label htmlFor="Time_OCC" className="form-label">Time:</label>
+                                <input type="text" className="form-control" name="Time_OCC" defaultValue={updatingCase[4]} />
+                            </div>
+                            <div className="mb-3">
+                                <label htmlFor="PremisDesc" className="form-label">Premis:</label>
+                                <input type="text" className="form-control" name="PremisDesc" defaultValue={updatingCase[6]} />
+                            </div>
+                            <div className="mb-3">
+                                <label htmlFor="Judge_Status" className="form-label">Judge:</label>
+                                <input type="text" className="form-control" name="Judge_Status" defaultValue={updatingCase[8]} />
+                            </div>
+                            <div className="mb-3">
+                                <label htmlFor="LAT" className="form-label">LAT:</label>
+                                <input type="text" className="form-control" name="LAT" defaultValue={updatingCase[13]} />
+                            </div>
+                            <div className="mb-3">
+                                <label htmlFor="LON" className="form-label">LON:</label>
+                                <input type="text" className="form-control" name="LON" defaultValue={updatingCase[14]} />
+                            </div>
+                            <div className="mb-3">
+                                <label htmlFor="Modus_operandi" className="form-label">Modus_operandi:</label>
+                                <input type="text" className="form-control" name="Modus_operandi" defaultValue={updatingCase[22]} />
+                            </div>
+                            <div className="mb-3">
+                                <label htmlFor="Weapon_Desc" className="form-label">Weapon:</label>
+                                <input type="text" className="form-control" name="Weapon_Desc" defaultValue={updatingCase[20]} />
+                            </div>
+                            <div className="mb-3">
+                                <label htmlFor="Crime_Desc" className="form-label">Crime:</label>
+                                <input type="text" className="form-control" name="Crime_Desc" defaultValue={updatingCase[23]} />
+                            </div>
+                            <div className="modal-footer">
+                                <button type="button" className="btn btn-secondary" onClick={() => setShowUpdateForm(false)}>Close</button>
+                                <button type="submit" className="btn btn-primary">Save Changes</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    );
+};
+    
 
     return (
         <div>
@@ -293,7 +325,7 @@ function SearchCase() {
                     </tbody>
                 </table>
             </div> */}
-            <div>
+             <div>
                 <h2>Search Results</h2>
                 <strong>{searchResults.length} records found</strong>
                 <table>
@@ -324,11 +356,6 @@ function SearchCase() {
                 </table>
             </div>
             {renderUpdateForm()}
-
-
-
-
-
 
         </div>
     );
