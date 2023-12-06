@@ -2,6 +2,11 @@ from flask import Flask, request, jsonify
 from flask_cors import CORS
 import pymysql
 import datetime,random,string,requests
+import openai
+from openai import OpenAI
+
+client = OpenAI(api_key='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')
+import os
 
 app = Flask(__name__)
 CORS(app)
@@ -193,7 +198,149 @@ def Create_case():
         print('Error:', e)
         return jsonify({'error': str(e)})
         
+
+@app.route('/advancedSQL1')
+def advSQL1():
+     with connection.cursor() as cursor:
+        # SQL query
+        sql = """select c2.crm_cd, c2.frequency, cd.Crm_cd_desc
+                from 
+                (Select crm_cd, count(*) as frequency
+                from ((select Dr_ID, Crm_cd1 as crm_cd from Crime)
+                Union (select Dr_ID, Crm_cd2 as crm_cd from Crime)
+                    Union (select Dr_ID, Crm_cd3 as crm_cd from Crime)
+                    Union (select Dr_ID, Crm_cd4 as crm_cd from Crime)) as c1
+                where crm_cd != ""
+                group by crm_cd
+                order by frequency desc) as c2
+                left join Crime_Desc cd on c2.crm_cd=cd.Crm_cd"""
+        cursor.execute(sql)
+        results = cursor.fetchall()
+
+        # Convert results to a list of dictionaries for JSON response
+        crime_list = []
+        for row in results:
+            crime_dict = {
+                "crm_cd": row[0],
+                "frequency": row[1],
+                "Crm_cd_desc": row[2],
+            }
+            crime_list.append(crime_dict)
+     return jsonify(crime_list)  
+
+
+@app.route('/advancedSQL2')
+def advSQL2():
+     with connection.cursor() as cursor:
+        # SQL query
+        sql = """   Select HourofDay, total_frequency as total_cases,
+                    PremisDesc as Most_PremisDesc_class, 
+                        frequency as cases_of_most_PremisDesc, 
+                        frequency/total_frequency as portion
+                    from
+                    (select HourofDay, count(Dr_ID) as total_frequency
+                    from(
+                    select Dr_ID, floor(Time_OCC/100) as HourofDay
+                    from Crime
+                    where Time_OCC != "") as kk7
+                    group by HourofDay
+                    order by HourofDay) as kk8
+                    natural join
+                    (select kk2.HourofDay, PremisDesc, frequency
+                    from 
+                    (select HourofDay,PremisDesc, count(Dr_ID) as frequency
+                    from (
+                    select Dr_ID, PremisDesc, floor(Time_OCC/100) as HourofDay
+                    from Crime
+                    where Time_OCC != "") as kk1
+                    group by PremisDesc, HourofDay
+                    order by HourofDay) as kk2
+                    left join
+                    (select HourofDay, max(frequency) as max_frequency
+                    from(
+                    select HourofDay,PremisDesc, count(Dr_ID) as frequency
+                    from (
+                    select Dr_ID, PremisDesc, floor(Time_OCC/100) as HourofDay
+                    from Crime
+                    where Time_OCC != "") as kk3
+                    group by PremisDesc, HourofDay
+                    order by HourofDay) as kk4
+                    group by HourofDay) as kk5
+                    on kk2.HourofDay=kk5.HourofDay
+                    where frequency=max_frequency) as kk6"""
+        cursor.execute(sql)
+        results = cursor.fetchall()
+
+        # Convert results to a list of dictionaries for JSON response
+        crime_list = []
+        for row in results:
+            crime_dict = {
+                "Hour": row[0],
+                "totalCase": row[1],
+                "top1Premis": row[2],
+                "top1cases": row[3],
+                "portion": row[4]
+            }
+            crime_list.append(crime_dict)
+     return jsonify(crime_list)  
+
+
+@app.route('/generateSummary2')
+def generate_summary2():
+    # model = "gpt-3.5-turbo"
+    # temperature = 0.7
+    # openai.api_key = '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'
+   
+    # response1 = requests.get('http://127.0.0.1:5000/advancedSQL1').json()
+    response2 = requests.get('http://127.0.0.1:5000/advancedSQL2').json()
+    # print(response1+response2)
+
+    # Format the data for GPT-3.5
+    formatted_data = f"Advanced SQL Query 2 Results:\n{response2}\n\n"
+    print (formatted_data)
     
+    # Call OpenAI's GPT-3.5 model to generate the summary
+    summary_response = client.chat.completions.create(
+    messages=[
+    {"role": "system", "content": "The query results provides a detailed hourly breakdown of criminal incidents, revealing patterns in total cases, predominant crime locations, and their relative proportions. Based on the query results, please provide a 250-word summary and tell people how to be safer in LA."},
+    {"role": "user", "content": formatted_data}
+    ],
+    model="gpt-3.5-turbo")
+
+    # Extract and return the summary
+    summary = summary_response.choices[0].message
+    print(summary)
+
+    return str(summary)
+
+@app.route('/generateSummary1')
+def generate_summary1():
+    # model = "gpt-3.5-turbo"
+    # temperature = 0.7
+    # openai.api_key = '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'
+   
+    response1 = requests.get('http://127.0.0.1:5000/advancedSQL1').json()
+    
+    # print(response1+response2)
+
+    # Format the data for GPT-3.5
+    formatted_data = f"Advanced SQL Query 1 Results:\n{response1}\n\n"
+    print (formatted_data)
+    
+    # Call OpenAI's GPT-3.5 model to generate the summary
+    summary_response = client.chat.completions.create(
+    messages=[
+    {"role": "system", "content": "The query results show various criminal activities in LA, along with their corresponding crime codes and frequencies of occurrence. Based on the query results, please provide a 250-word summary of your key findings."},
+    {"role": "user", "content": formatted_data}
+    ],
+    model="gpt-3.5-turbo")
+
+    # Extract and return the summary
+    summary = summary_response.choices[0].message
+    print(summary)
+
+    return str(summary)
+
 
 if __name__ == '__main__':
     app.run(debug=True)
