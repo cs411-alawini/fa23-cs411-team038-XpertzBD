@@ -2,6 +2,9 @@ from flask import Flask, request, jsonify
 from flask_cors import CORS
 import pymysql
 import datetime,random,string,requests
+from flask_jwt_extended import JWTManager, create_access_token, jwt_required, get_jwt_identity
+from werkzeug.security import generate_password_hash, check_password_hash
+
 import openai
 from openai import OpenAI
 
@@ -9,6 +12,8 @@ client = OpenAI(api_key='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')
 import os
 
 app = Flask(__name__)
+app.config['JWT_SECRET_KEY'] = 'your_jwt_secret'  # Change this to a random secret key
+jwt = JWTManager(app)
 CORS(app)
 CORS(app, resources={r"/create": {"origins": "http://localhost:3000"}})
 
@@ -20,6 +25,17 @@ dbname = "CrimeData"
 
 # Connect to the database
 connection = pymysql.connect(host=host, user=user, password=password, db=dbname)
+
+# Fetch users and their passwords from the database and store in users{}
+try:
+    with connection.cursor() as cursor:
+        sql = "SELECT UserName, Password FROM User"
+        cursor.execute(sql)
+        result = cursor.fetchall()
+        users = {username: {'password': password} for username, password in result}
+except Exception as e:
+    f"Database connection failed: {e}", 500
+    
 
 CrimeTypeDic = {
     'Robbery': '210',
@@ -42,36 +58,6 @@ WeaponTypeDic = {
     'Hammer':'311',
     'Physical':'515'
 }
-
-def convert_date_format(input_date):
-    # Parse the input date string
-    date = datetime.strptime(input_date, "%Y/%m/%d")
-
-    # Extract the month, day, and year, and format the date as M/D/YY
-    month = date.month  # month as a number without leading zero
-    day = date.day      # day as a number without leading zero
-    year = date.strftime("%y")  # year in two-digit format
-
-    return f"{month}/{day}/{year}"
-
-@app.route('/')
-def hello_world():
-    return 'Hello, World!'
-
-@app.route('/test_db')
-def test_db():
-    try:
-        # Connect to the database
-        connection = pymysql.connect(host=host, user=user, password=password, db=dbname)
-        
-        with connection.cursor() as cursor:
-            # Perform a simple test query
-            cursor.execute("SELECT CURDATE()")
-            result = cursor.fetchone()
-
-        return f"Database connection successful. Date from DB: {result[0]}"
-    except Exception as e:
-        return f"Database connection failed: {e}", 500
 
 # Function to generate a random DR_ID
 def generate_random_id(size=6, chars=string.ascii_uppercase + string.digits):
@@ -98,6 +84,94 @@ def get_lat_lon_from_address(address):
         return lat, lon
     else:
         raise ValueError("Could not geocode address: " + response.text)
+    
+def convert_date_format(input_date):
+    # Parse the input date string
+    date = datetime.strptime(input_date, "%Y/%m/%d")
+
+    # Extract the month, day, and year, and format the date as M/D/YY
+    month = date.month  # month as a number without leading zero
+    day = date.day      # day as a number without leading zero
+    year = date.strftime("%y")  # year in two-digit format
+
+    return f"{month}/{day}/{year}"
+
+# Function to check if the userID is unique
+def is_user_id_unique(userID, cursor):
+    sql = "SELECT EXISTS(SELECT 1 FROM User WHERE UserID=%s)"
+    cursor.execute(sql, (userID,))
+    return cursor.fetchone()[0] == 0
+
+@app.route('/')
+def hello_world():
+    return 'Hello, World!'
+
+@app.route('/signin', methods=['POST'])
+def login():
+    username = request.json.get('username', None)
+    password = request.json.get('password', None)
+    
+    # This should be replaced with a database lookup
+    if username not in users or not check_password_hash(users[username]['password'], password):
+        return jsonify({"msg": "Bad username or password"}), 401
+
+    access_token = create_access_token(identity=username)
+    return jsonify(access_token=access_token)
+
+def is_username_unique(username, cursor):
+    sql = "SELECT COUNT(*) FROM User WHERE UserName = %s"
+    cursor.execute(sql, (username,))
+    result = cursor.fetchone()
+    return result[0] == 0
+
+@app.route('/signup', methods=['POST'])
+def signup():
+    username = request.json.get('username')
+    password = request.json.get('password')
+    print("username,Password:", username,password)
+    try:
+            with connection.cursor() as cursor:
+                
+                # Check if the username is unique
+                if not is_username_unique(username, cursor):
+                    return jsonify({"msg": "Signup failed Usernmae already taken", "error": "Username already taken"}), 400
+
+                # Generate a unique UserID
+                userID = generate_random_id()
+                while not is_user_id_unique(userID, cursor):
+                    userID = generate_random_id()
+                print("UserID: ",userID)
+
+                # Hash the user's password
+                hashed_password = generate_password_hash(password)
+                
+                # Insert the new user into the database
+                sql = "INSERT INTO User (UserID, UserName, Password) VALUES (%s, %s, %s)"
+                cursor.execute(sql, (userID, username, hashed_password))
+                connection.commit()
+                
+                return jsonify({"msg": "Signup successful", "userID": userID}), 200
+    except Exception as e:
+        # Handle exception
+        return jsonify({"msg": "Signup failed", "error": str(e)}), 500
+
+
+@app.route('/test_db')
+def test_db():
+    try:
+        # Connect to the database
+        connection = pymysql.connect(host=host, user=user, password=password, db=dbname)
+        
+        with connection.cursor() as cursor:
+            # Perform a simple test query
+            cursor.execute("SELECT CURDATE()")
+            result = cursor.fetchone()
+
+        return f"Database connection successful. Date from DB: {result[0]}"
+    except Exception as e:
+        return f"Database connection failed: {e}", 500
+
+
     
 
 @app.route('/search', methods=['GET'])
