@@ -71,11 +71,20 @@ function CreateCase() {
                 body: JSON.stringify(caseDetails),
             });
 
-            if (!response.ok) {
-                throw new Error(`HTTP error! status: ${response.status}`)
-            }
+            // if (!response.ok) {
+            //     const errorData = await response.json();
+            //     if (errorData && errorData.message === 'Duplicate record exists. Insertion prevented.') {
+            //         alert('Duplicate record exists. Insertion prevented.');
+            //         return;
+            //     }
+            //     throw new Error(`HTTP error! status: ${response.status}`)
+            // }
+            
             const data = await response.json();
             console.log(data);
+            if(JSON.stringify(data) === JSON.stringify({error: "(1644, 'Duplicate record exists. Insertion prevented.')"}))
+            alert('Case reported failed due to duplication!');
+            else
             alert('Case reported successfully!');
         } catch (error) {
             console.error('Error submitting the case:', error);

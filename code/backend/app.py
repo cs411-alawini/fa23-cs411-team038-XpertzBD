@@ -59,6 +59,29 @@ WeaponTypeDic = {
     'Physical':'515'
 }
 
+CrimeTypeDic1 = {
+    'CRIMINAL ROBBERY': '210',
+    'CRIMINAL HOMICIDE': '110',
+    'CRIMINAL BURGLARY': '310',
+    'CRIMINAL STALKING': '763',
+    'CRIMINAL DRUG': '865',
+    'CRIMINAL KIDNAPPING': '910',
+    'CRIMINAL TRESPASSING': '888',
+    'CRIMINAL SHOOTING': '753',
+    'CRIMINAL THEFT': '350'
+}
+
+WeaponTypeDic1 = {
+    'SHOT GUN': '104',
+    'HAND GUN': '102',
+    'UNKNOWN FIREARM': '106',
+    'KITCHEN KNIFE': '205',
+    'FOLDING KNIFE': '204',
+    'UNKOWN KNIFE': '207',
+    'HAMMER': '311',
+    'PHYSICAL': '515'
+}
+
 # Function to generate a random DR_ID
 def generate_random_id(size=6, chars=string.ascii_uppercase + string.digits):
     return ''.join(random.choice(chars) for _ in range(size))
@@ -420,6 +443,62 @@ def generate_summary1():
 
     return str(summary)
 
+
+@app.route('/delete_case/<case_id>', methods=['DELETE'])
+def delete_case(case_id):
+    try:
+        with connection.cursor() as cursor:
+            cursor.execute("DELETE FROM Crime WHERE Dr_ID = %s", (case_id,))
+            connection.commit()
+            print(f"Deleted case with Dr_ID: {case_id}")
+        return jsonify({'message': 'Case deleted successfully.'})
+    except Exception as e:
+        connection.rollback()
+        print('Error during deletion:', e)
+        return jsonify({'error': str(e)}), 500
+
+@app.route('/update_case/<case_id>', methods=['PUT'])
+def update_case(case_id):
+    data = request.get_json()
+    print("Received data:", data)
+
+    try:
+        with connection.cursor() as cursor:
+            weapon_code = WeaponTypeDic1.get(data['Weapon_Desc'], '000')
+            print('weapon_code:', weapon_code)
+
+            crime_code = CrimeTypeDic1.get(data['Crime_Desc'], '000')
+            print('crime_code:', crime_code)
+            if not crime_code:
+                return jsonify({'error': 'Invalid crime type'}), 400
+            
+            Mecodes = data['Modus_operandi']
+            print('Mecodes:', Mecodes)
+            
+            try:
+                LAT = float(data['LAT']) if data['LAT'] not in (None, '') else None
+                LON = float(data['LON']) if data['LON'] not in (None, '') else None
+            except ValueError as e:
+                return jsonify({'error': 'Invalid LAT or LON value'}), 400
+
+
+            update_sql = """
+            UPDATE Crime SET Date_OCC = %s, Time_OCC = %s, PremisDesc = %s, 
+            Judge_Status_desc = %s, LAT = %s, LON = %s, Weapon_Used_Cd = %s, 
+            Mocode1 = %s, Crm_cd = %s WHERE Dr_ID = %s
+            """
+            cursor.execute(update_sql, (
+                data['Date_OCC'], data['Time_OCC'], data['PremisDesc'],
+                data['Judge_Status_desc'], LAT, LON,
+                weapon_code,
+                data['Modus_operandi'], crime_code, case_id
+            ))
+            connection.commit()
+        return jsonify({'message': 'Case updated successfully'})
+    except Exception as e:
+        connection.rollback()
+        print('Error:', e)
+        return jsonify({'error': str(e)}), 500
 
 if __name__ == '__main__':
     app.run(debug=True)
